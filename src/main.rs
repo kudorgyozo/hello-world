@@ -1,35 +1,53 @@
-mod structs;
 mod missile;
-
+mod explosion;
+use missile::*;
+use explosion::*;
 use raylib::prelude::*;
 
-use structs::*;
-pub const SCREEN_WIDTH:i32 = 800;
-pub const SCREEN_HEIGHT:i32 = 600;
+pub const SCREEN_WIDTH: f32 = 800.0;
+pub const SCREEN_HEIGHT: f32 = 600.0;
 
 fn main() {
-    
-    //let mut player: Player = Player { pos: SCREEN_WIDTH as f32 / 2.0 };
-    //let ball: Ball = Ball { pos: Vector2 { x: (SCREEN_WIDTH / 2) as f32, y: (SCREEN_HEIGHT / 2) as f32 }, vel: Vector2 { x: 0., y: 0. }};
-
-
     let (mut rl, thread) = raylib::init()
-        .size(SCREEN_WIDTH, SCREEN_HEIGHT)
-        .title("Missile command")
+        .size(SCREEN_WIDTH as i32, SCREEN_HEIGHT as i32)
+        .title("Missile Command")
         .build();
-     
+
+    let mut missiles: Vec<Missile> = Vec::with_capacity(100);
+    let mut explosions: Vec<Explosion> = Vec::with_capacity(200);
+    let launch_pos = Vector2::new(SCREEN_WIDTH / 2.0, SCREEN_HEIGHT); // Bottom center
+
     while !rl.window_should_close() {
+        if rl.is_mouse_button_pressed(MouseButton::MOUSE_BUTTON_LEFT) {
+            let target = rl.get_mouse_position();
+            missiles.push(Missile::new(launch_pos, target));
+        }
 
-        //let frame_time: f32 = rl.get_frame_time();
-        //player.update(&mut rl);
+        let delta_time = rl.get_frame_time();
 
+        // Update missiles and create explosions when they reach target
+        missiles.retain_mut(|m| {
+            if !m.update(delta_time) {
+                explosions.push(Explosion::new(m.position));
+                return false; // Remove missile
+            }
+            true
+        });
 
-        {
-            let mut d = rl.begin_drawing(&thread);
-            d.clear_background(Color::WHITE);
-            
-            //player.draw(&mut d);
-            //d.draw_rectangle(player.pos.round() as i32 - PLAYER_WIDTH / 2, SCREEN_HEIGHT - PLAYER_HEIGHT - PLAYER_HEIGHT / 2, PLAYER_WIDTH, PLAYER_HEIGHT, Color::RED);
+        // Update explosions and remove finished ones
+        explosions.retain_mut(|e| e.update(delta_time));
+
+        let mut d = rl.begin_drawing(&thread);
+        d.clear_background(Color::BLACK);
+
+        // Draw missiles
+        for missile in &missiles {
+            missile.draw(&mut d);
+        }
+
+        // Draw explosions
+        for explosion in &explosions {
+            explosion.draw(&mut d);
         }
     }
 }

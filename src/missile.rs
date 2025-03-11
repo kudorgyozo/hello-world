@@ -1,32 +1,30 @@
 use raylib::prelude::*;
 
-pub const MISSILE_SPEED:f32 = 10.0;
+pub const MISSILE_SPEED: f32 = 320.0;
+pub const TARGET_RADIUS: f32 = 5.0;
 
-struct Missile {
-    position: Vector2,
+pub struct Missile {
+    pub position: Vector2,
     velocity: Vector2,
-    active: bool,
+    target: Vector2,
 }
 
 impl Missile {
-    fn new(start: Vector2, target: Vector2) -> Self {
-        let direction = (target - start).normalize(); // Get unit direction
+    pub fn new(start: Vector2, target: Vector2) -> Self {
+        let direction = (target - start).normalized() * MISSILE_SPEED;
         Self {
             position: start,
-            velocity: direction * speed,
-            active: true,
+            velocity: direction,
+            target,
         }
     }
 
-    fn update(&mut self) {
-        if self.active {
-            self.position += self.velocity;
-        }
+    pub fn update(&mut self, delta_time: f32) -> bool {
+        self.position += self.velocity * delta_time;
+        (self.position - self.target).length() >= TARGET_RADIUS
     }
 
-    fn draw(&self, d: &mut RaylibDrawHandle) {
-        if self.active {
-            d.draw_circle_v(self.position, 5.0, Color::RED);
-        }
+    pub fn draw(&self, d: &mut RaylibDrawHandle) {
+        d.draw_circle_v(self.position, 5.0, Color::RED);
     }
 }
