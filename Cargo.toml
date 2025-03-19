@@ -6,3 +6,4 @@ edition = "2024"
 rustflags = ["-A non_snake_case"]
 [dependencies]
 raylib = { version = "5.0.2" }
+rand = "0.9.0"
